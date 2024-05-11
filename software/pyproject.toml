@@ -141,6 +141,8 @@ radio-nrf24l01 = "glasgow.applet.radio.nrf24l01:RadioNRF24L01Applet"
 
 pins = "glasgow.applet.interface.pins:PinsApplet"
 blinky = "glasgow.applet.interface.blinky:BlinkyApplet"
+simplecounter = "glasgow.applet.internal.simplecounter:SimpleCounterApplet"
+multibytecounter = "glasgow.applet.internal.multibytecounter:MultibyteCounterApplet"
 
 [project.urls]
 "Documentation" = "https://glasgow-embedded.org/"
