@@ -10,9 +10,10 @@ import evdev
 
 class NESSubtarget(Elaboratable):
     help = ""
-    def __init__(self, out_fifo, pads):
+    def __init__(self, target, out_fifo, pads):
         self.out_fifo = out_fifo
         self.pads = pads
+        self.led = target.platform.request("led", 0)
 
     def elaborate(self, platform):
         m = Module()
@@ -21,6 +22,9 @@ class NESSubtarget(Elaboratable):
         clock = Signal()
         data = Signal()
 
+        led_state = Signal(range(256))
+        led_counter = Signal.like(led_state)
+
         m.submodules += [
             FFSynchronizer(self.pads.latch_t.i, latch),
             FFSynchronizer(self.pads.clock_t.i, clock),
@@ -28,7 +32,8 @@ class NESSubtarget(Elaboratable):
         
         m.d.comb += [
             self.pads.data_t.oe.eq(1),
-            self.pads.data_t.o.eq(data)
+            self.pads.data_t.o.eq(data),
+            self.led.eq(led_counter < led_state)
         ]
 
         # inputs to the shift register; what will be brought in
@@ -43,12 +48,18 @@ class NESSubtarget(Elaboratable):
         # data is always the top bit of the shift register
         m.d.comb += data.eq(register[13])
 
+        m.d.sync += led_counter.eq(led_counter+1)
+
         with m.FSM() as fsm:
             with m.State("LATCH-LOW"):
                 with m.If(latch == 1):
+                    with m.If(led_state >= 7):
+                        m.d.sync += led_state.eq(led_state-7)
                     m.next = "LATCH-HIGH"
             with m.State("LATCH-HIGH"):
-                m.d.sync += register.eq(buttons)
+                m.d.sync += [
+                    register.eq(buttons),
+                ]
                 with m.If(latch == 0):
                     m.next = "LATCH-LOW"
 
@@ -73,7 +84,10 @@ class NESSubtarget(Elaboratable):
             with m.State("PROCESS-COMMAND"):
                 with m.If(command[7] == 1):
                     # high byte
-                    m.d.sync += buttons[7:14].eq(command[0:7])
+                    m.d.sync += [
+                        buttons[7:14].eq(command[0:7]),
+                        led_state.eq(255)
+                    ]
                 with m.Else():
                     # low byte
                     m.d.sync += buttons[0:7].eq(command[0:7])
@@ -173,6 +187,7 @@ class NESApplet(GlasgowApplet):
         self.mux_interface = iface = \
             target.multiplexer.claim_interface(self, args)
         subtarget = iface.add_subtarget(NESSubtarget(
+            target=target,
             out_fifo=iface.get_out_fifo(),
             pads=iface.get_pads(args, pins=self.__pins)
         ))
