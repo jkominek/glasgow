@@ -1,6 +1,7 @@
 import logging
 import argparse
 from amaranth import *
+from amaranth.lib.cdc import FFSynchronizer
 
 from ....gateware.pads import *
 from ... import *
@@ -20,11 +21,12 @@ class NESSubtarget(Elaboratable):
         clock = Signal()
         data = Signal()
 
+        m.submodules += [
+            FFSynchronizer(self.pads.latch_t.i, latch),
+            FFSynchronizer(self.pads.clock_t.i, clock),
+        ]
+        
         m.d.comb += [
-            latch.eq(self.pads.latch_t.i),
-
-            clock.eq(self.pads.clock_t.i),
-
             self.pads.data_t.oe.eq(1),
             self.pads.data_t.o.eq(data)
         ]
@@ -41,47 +43,25 @@ class NESSubtarget(Elaboratable):
         # data is always the top bit of the shift register
         m.d.comb += data.eq(register[13])
 
-        latch_deglitch = Signal(range(8))
         with m.FSM() as fsm:
             with m.State("LATCH-LOW"):
                 with m.If(latch == 1):
-                    with m.If(latch_deglitch>=4):
-                        m.next = "LATCH-HIGH"
-                    with m.Else():
-                        m.d.sync += latch_deglitch.eq(latch_deglitch+1)
-                with m.Else():
-                    m.d.sync += latch_deglitch.eq(0)
+                    m.next = "LATCH-HIGH"
             with m.State("LATCH-HIGH"):
                 m.d.sync += register.eq(buttons)
                 with m.If(latch == 0):
-                    with m.If(latch_deglitch>=4):
-                        m.next = "LATCH-LOW"
-                    with m.Else():
-                        m.d.sync += latch_deglitch.eq(latch_deglitch+1)
-                with m.Else():
-                    m.d.sync += latch_deglitch.eq(0)
+                    m.next = "LATCH-LOW"
 
-        clock_deglitch = Signal(range(8))
         with m.FSM() as fsm:
             with m.State("CLOCK-HIGH"):
                 with m.If(clock == 0):
-                    with m.If(clock_deglitch>=4):
-                        m.next = "CLOCK-LOW"
-                    with m.Else():
-                        m.d.sync += clock_deglitch.eq(clock_deglitch+1)
-                with m.Else():
-                    m.d.sync += clock_deglitch.eq(0)
+                    m.next = "CLOCK-LOW"
             with m.State("CLOCK-LOW"):
                 with m.If(clock == 1):
-                    with m.If(clock_deglitch>=4):
-                        m.d.sync += [
-                            register.eq(Cat(Const(0), register[0:13]))
-                        ]
-                        m.next = "CLOCK-HIGH"
-                    with m.Else():
-                        m.d.sync += clock_deglitch.eq(clock_deglitch+1)
-                with m.Else():
-                    m.d.sync += clock_deglitch.eq(0)
+                    m.d.sync += [
+                        register.eq(Cat(Const(0), register[0:13]))
+                    ]
+                    m.next = "CLOCK-HIGH"
 
         # reading from fifo into buttons
         with m.FSM():
