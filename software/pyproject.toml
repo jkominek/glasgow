@@ -144,6 +144,7 @@ blinky = "glasgow.applet.interface.blinky:BlinkyApplet"
 simplecounter = "glasgow.applet.internal.simplecounter:SimpleCounterApplet"
 multibytecounter = "glasgow.applet.internal.multibytecounter:MultibyteCounterApplet"
 nescontroller = "glasgow.applet.sensor.nescontroller:NESControllerApplet"
+nes = "glasgow.applet.control.nes:NESApplet"
 
 [project.urls]
 "Documentation" = "https://glasgow-embedded.org/"
