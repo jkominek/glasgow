@@ -145,6 +145,7 @@ simplecounter = "glasgow.applet.internal.simplecounter:SimpleCounterApplet"
 multibytecounter = "glasgow.applet.internal.multibytecounter:MultibyteCounterApplet"
 nescontroller = "glasgow.applet.sensor.nescontroller:NESControllerApplet"
 nes = "glasgow.applet.control.nes:NESApplet"
+mcp3008 = "glasgow.applet.sensor.mcp3008:MCP3008Applet"
 
 [project.urls]
 "Documentation" = "https://glasgow-embedded.org/"
