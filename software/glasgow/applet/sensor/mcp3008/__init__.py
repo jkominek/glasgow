@@ -97,6 +97,8 @@ class MCP3008Subtarget(Elaboratable):
                 # here the ADC doesn't care what we send,
                 # and isn't sending anything either
                 m.d.fsm += mosi.eq(0)
+                m.next = "NullBit-0"
+            with m.State("NullBit-0"):
                 m.next = "NullBit"
             with m.State("NullBit"):
                 # and here it'll send a 0 every time.
