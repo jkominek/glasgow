@@ -37,7 +37,7 @@ class MCP3008Subtarget(Elaboratable):
         value = Signal(10)
 
         m.d.comb += [
-            timer_cyc.eq(13),
+            timer_cyc.eq(12),
             
  #           self.pads.miso_t.oe.eq(0),
 
@@ -184,7 +184,7 @@ class MCP3008Interface:
         while True:
             results = await self.read()
             for record in results:
-                print("{: 6d}  {:4d} {:4d} {:4d} {:4d} {:4d} {:4d} {:4d} {:4d}".format(*record))
+                print("{: 6d}  {:4d} {:4d} {:4d} {:4d} {:4d} {:4d} {:4d} {:4d}  {:.1f}".format(*record, self.Hz))
     async def record(self):
         import datetime
         print("capturing...")
