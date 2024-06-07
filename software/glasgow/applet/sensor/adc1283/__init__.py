@@ -37,7 +37,7 @@ class ADC1283Subtarget(Elaboratable):
         value = Signal(12)
 
         m.d.comb += [
-            timer_cyc.eq(13),
+            timer_cyc.eq(7),
             
  #           self.pads.miso_t.oe.eq(0),
 
@@ -139,6 +139,9 @@ class ADC1283Subtarget(Elaboratable):
         # read values from the asyncfifo into our fast clockdomain
         # and send them out over USB.
         fastvalue = Signal(15)
+        # TODO i don't think all of these m.If(self.in_fifo.w_rdy) are
+        # right, i think that needs to happen in a state where we're
+        # not emitting bytes.
         with m.FSM():
             with m.State("ReadValue"):
                 m.d.comb += adcfifo.r_en.eq(1)
@@ -225,7 +228,7 @@ class ADC1283Interface:
             if self.data[0] == 0x7d:
                 self.data = bytes({self.data[1] ^ 0x20}) + self.data[2:]
             if self.data[1] == 0x7d:
-                self.data = self.data[0:1] + bytes({self.data[1] ^ 0x20}) + self.data[3:]
+                self.data = self.data[0:1] + bytes({self.data[2] ^ 0x20}) + self.data[3:]
 
             #print(self.data[0:2])
             bh = self.data[0]
