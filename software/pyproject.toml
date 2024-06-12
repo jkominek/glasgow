@@ -148,6 +148,7 @@ nes = "glasgow.applet.control.nes:NESApplet"
 mcp3008 = "glasgow.applet.sensor.mcp3008:MCP3008Applet"
 adc1283 = "glasgow.applet.sensor.adc1283:ADC1283Applet"
 cx16 = "glasgow.applet.interface.cx16:CommanderX16Applet"
+ft232hasync = "glasgow.applet.interface.ft232h:FT232HAsyncFIFOApplet"
 
 [project.urls]
 "Documentation" = "https://glasgow-embedded.org/"
